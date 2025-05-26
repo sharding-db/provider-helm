@@ -14,4 +14,6 @@ type Args struct {
 	SkipCRDs bool
 	// InsecureSkipTLSVerify skips tls certificate checks for the chart download
 	InsecureSkipTLSVerify bool
+	// Install indicates whether the Helm client should install the chart if it is not already installed.
+	Install bool
 }
