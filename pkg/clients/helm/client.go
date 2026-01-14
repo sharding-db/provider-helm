@@ -125,6 +125,7 @@ func NewClient(log logging.Logger, restConfig *rest.Config, argAppliers ...ArgsA
 	ic.Timeout = args.Timeout
 	ic.SkipCRDs = args.SkipCRDs
 	ic.InsecureSkipTLSverify = args.InsecureSkipTLSVerify
+	ic.DisableOpenAPIValidation = true
 
 	uc := action.NewUpgrade(actionConfig)
 	uc.Wait = args.Wait
@@ -132,6 +133,7 @@ func NewClient(log logging.Logger, restConfig *rest.Config, argAppliers ...ArgsA
 	uc.SkipCRDs = args.SkipCRDs
 	uc.InsecureSkipTLSverify = args.InsecureSkipTLSVerify
 	uc.Install = args.Install
+	uc.DisableOpenAPIValidation = true
 
 	uic := action.NewUninstall(actionConfig)
 	uic.Wait = args.Wait
