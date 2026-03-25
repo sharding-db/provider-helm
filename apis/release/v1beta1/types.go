@@ -118,6 +118,9 @@ type ReleaseStatus struct {
 	PatchesSha          string             `json:"patchesSha,omitempty"`
 	Failed              int32              `json:"failed,omitempty"`
 	Synced              bool               `json:"synced,omitempty"`
+	// ObservedGeneration is the latest metadata.generation observed by a successful reconcile.
+	// When it matches metadata.generation, the controller can skip remote cluster connection.
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
 
 // ConnectionDetail todo

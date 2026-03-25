@@ -994,6 +994,12 @@ spec:
               failed:
                 format: int32
                 type: integer
+              observedGeneration:
+                description: ObservedGeneration is the latest metadata.generation
+                  observed by a successful reconcile. When it matches metadata.generation,
+                  the controller can skip remote cluster connection.
+                format: int64
+                type: integer
               patchesSha:
                 type: string
               synced:

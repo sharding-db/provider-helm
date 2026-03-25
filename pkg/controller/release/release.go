@@ -143,6 +143,15 @@ func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.E
 	}
 	l := c.logger.WithValues("request", cr.Name)
 
+	// Fast path: skip remote connection when generation is unchanged and release is healthy
+	if !meta.WasDeleted(cr) &&
+		cr.Status.ObservedGeneration == cr.GetGeneration() &&
+		cr.Status.Synced &&
+		cr.Status.AtProvider.State == release.StatusDeployed {
+		l.Debug("Skipping remote connection, generation unchanged")
+		return &noopExternal{logger: l}, nil
+	}
+
 	l.Debug("Connecting")
 
 	p := &helmv1beta1.ProviderConfig{}
@@ -264,6 +273,7 @@ func (e *helmExternal) Observe(ctx context.Context, mg resource.Managed) (manage
 	cd := managed.ConnectionDetails{}
 	if cr.Status.AtProvider.State == release.StatusDeployed && s {
 		cr.Status.Failed = 0
+		cr.Status.ObservedGeneration = cr.GetGeneration()
 
 		cd, err = connectionDetails(ctx, e.kube, cr.Spec.ConnectionDetails, rel.Name, rel.Namespace)
 		if err != nil {
@@ -426,4 +436,35 @@ func waitTimeout(cr *v1beta1.Release) time.Duration {
 		return cr.Spec.ForProvider.WaitTimeout.Duration
 	}
 	return defaultWaitTimeout
+}
+
+// noopExternal is returned by Connect() when the release generation is unchanged,
+// avoiding remote cluster connection entirely.
+type noopExternal struct {
+	logger logging.Logger
+}
+
+func (e *noopExternal) Observe(_ context.Context, mg resource.Managed) (managed.ExternalObservation, error) {
+	cr, ok := mg.(*v1beta1.Release)
+	if !ok {
+		return managed.ExternalObservation{}, errors.New(errNotRelease)
+	}
+	e.logger.Debug("Skipping observe, generation unchanged")
+	cr.Status.SetConditions(xpv1.Available())
+	return managed.ExternalObservation{
+		ResourceExists:   true,
+		ResourceUpToDate: true,
+	}, nil
+}
+
+func (e *noopExternal) Create(_ context.Context, _ resource.Managed) (managed.ExternalCreation, error) {
+	return managed.ExternalCreation{}, nil
+}
+
+func (e *noopExternal) Update(_ context.Context, _ resource.Managed) (managed.ExternalUpdate, error) {
+	return managed.ExternalUpdate{}, nil
+}
+
+func (e *noopExternal) Delete(_ context.Context, _ resource.Managed) error {
+	return nil
 }
