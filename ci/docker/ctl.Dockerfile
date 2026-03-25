@@ -1,5 +1,5 @@
 
-FROM golang:1.18-alpine AS builder
+FROM golang:1.21-alpine AS builder
 
 RUN apk add --no-cache git
 
@@ -14,7 +14,9 @@ RUN mkdir -p ./bin \
 
 RUN wget https://github.com/milvus-io/milvus-helm/raw/milvus-4.0.27/charts/milvus/charts/etcd-6.3.3.tgz -P /go/
 
-FROM alpine:3.13
+FROM alpine:3.18
+
+COPY package/crossplane.yaml .
 
 COPY --from=builder /go/src/github.com/sharding-db/provider-helm/bin/provider-helm /usr/bin/provider-helm
 COPY --from=builder /go/etcd-6.3.3.tgz /tmp/charts/etcd-6.3.3.tgz

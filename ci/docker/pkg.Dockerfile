@@ -1,0 +1,8 @@
+FROM alpine:3.18
+
+ARG PROVIDER_CTL_VERSION
+
+COPY package/package.yaml .
+RUN sed -i "s|PROVIDER_CTL_VERSION|${PROVIDER_CTL_VERSION}|g" package.yaml
+
+USER 65532:65532

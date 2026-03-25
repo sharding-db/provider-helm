@@ -21,3 +21,7 @@ metadata:
       [crossplane-contrib/provider-helm](https://github.com/crossplane-contrib/provider-helm)
       repo.
     friendly-name.meta.crossplane.io: Provider Helm
+
+spec:
+  controller:
+    image: harbor-ap1.zilliz.cc/vdc/provider-helm-controller:PROVIDER_CTL_VERSION
