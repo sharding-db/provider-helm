@@ -143,12 +143,13 @@ func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.E
 	}
 	l := c.logger.WithValues("request", cr.Name)
 
-	// Fast path: skip remote connection when generation is unchanged and release is healthy
+	// Fast path: skip remote connection when generation is unchanged and release is synced+ready
 	if !meta.WasDeleted(cr) &&
 		cr.Status.ObservedGeneration == cr.GetGeneration() &&
-		cr.Status.Synced &&
-		cr.Status.AtProvider.State == release.StatusDeployed {
-		l.Debug("Skipping remote connection, generation unchanged")
+		cr.Status.ObservedGeneration > 0 &&
+		cr.GetCondition(xpv1.TypeSynced).Status == corev1.ConditionTrue &&
+		cr.GetCondition(xpv1.TypeReady).Status == corev1.ConditionTrue {
+		l.Debug("Skipping remote connection, generation unchanged and conditions met")
 		return &noopExternal{logger: l}, nil
 	}
 
@@ -167,6 +168,12 @@ func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.E
 	n := types.NamespacedName{Name: cr.GetProviderConfigReference().Name}
 	if err := c.client.Get(ctx, n, p); err != nil {
 		return nil, errors.Wrap(err, errProviderNotRetrieved)
+	}
+
+	// Noop for offline ProviderConfig
+	if p.GetLabels()["offline"] == "true" {
+		l.Debug("Skipping remote connection, ProviderConfig is offline")
+		return &noopExternal{logger: l}, nil
 	}
 
 	var rc *rest.Config
