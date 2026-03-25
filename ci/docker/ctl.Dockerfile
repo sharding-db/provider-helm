@@ -16,7 +16,11 @@ RUN wget https://github.com/milvus-io/milvus-helm/raw/milvus-4.0.27/charts/milvu
 
 FROM alpine:3.18
 
-COPY package/crossplane.yaml .
+WORKDIR /
+
+ARG PROVIDER_CTL_VERSION
+COPY package/package.yaml /package.yaml
+RUN sed -i "s|PROVIDER_CTL_VERSION|${PROVIDER_CTL_VERSION}|g" /package.yaml
 
 COPY --from=builder /go/src/github.com/sharding-db/provider-helm/bin/provider-helm /usr/bin/provider-helm
 COPY --from=builder /go/etcd-6.3.3.tgz /tmp/charts/etcd-6.3.3.tgz

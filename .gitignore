@@ -6,4 +6,3 @@
 /.vendor-new
 .vscode
 .idea
-package/package.yaml
